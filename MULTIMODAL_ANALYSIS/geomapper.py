@@ -1,3 +1,34 @@
+"""
+conda install pandas folium customtkinter openpyxl geopy thefuzz python-Levenshtein
+
+GeoMapper Inteligente
+
+Aplicação desktop para geração automática de mapas interativos a partir de planilhas Excel ou CSV contendo endereços.
+
+Leitura automática de arquivos XLSX, XLS e CSV.
+Detecção inteligente da coluna de endereço.
+Geocodificação de endereços completos utilizando OpenStreetMap/Nominatim.
+Conversão automática de endereços em coordenadas geográficas.
+Geração de mapa interativo HTML com marcadores.
+Exibição de dados complementares da planilha em popups.
+Interface gráfica moderna desenvolvida com CustomTkinter.
+Barra de progresso durante o processamento.
+Abertura automática do mapa gerado no navegador.
+
+Fluxo:
+Planilha -> Geocodificação -> Latitude/Longitude -> Mapa Interativo -> Exportação HTML
+
+Aplicações:
+
+Logística e roteirização.
+Mapeamento de clientes.
+Inteligência comercial.
+Projetos ESG.
+Planejamento territorial.
+Monitoramento de ativos e operações.
+
+"""
+
 import os
 import webbrowser
 import unicodedata
