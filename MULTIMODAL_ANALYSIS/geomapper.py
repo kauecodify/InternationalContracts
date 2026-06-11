@@ -27,6 +27,8 @@ Projetos ESG.
 Planejamento territorial.
 Monitoramento de ativos e operações.
 
+alterações: em "def detectar_coluna_endereco" > linha 67
+
 """
 
 import os
