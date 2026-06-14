@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Cambial Argentina</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #eef8ff;
+            color: #003366;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(90deg, #74ACDF, #FFFFFF, #74ACDF);
+            padding: 25px;
+            text-align: center;
+            border-bottom: 5px solid #F6B40E;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        header h1 {
+            font-size: 32px;
+            color: #003366;
+        }
+
+        header p {
+            margin-top: 8px;
+            color: #555;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 25px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, .1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .15);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #74ACDF, #F6B40E);
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #003366;
+        }
+
+        .valor {
+            font-size: 36px;
+            font-weight: bold;
+            color: #0074D9;
+            transition: opacity 0.3s ease;
+        }
+
+        .valor.loading {
+            opacity: 0.4;
+        }
+
+        .valor.error {
+            color: #c0392b;
+            font-size: 18px;
+        }
+
+        .historico {
+            margin-top: 30px;
+        }
+
+        .form-historico {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="date"] {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            flex: 1;
+            min-width: 200px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #74ACDF;
+            box-shadow: 0 0 0 3px rgba(116, 172, 223, 0.2);
+        }
+
+        button {
+            padding: 12px 20px;
+            background: #74ACDF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover:not(:disabled) {
+            background: #4f95d4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(116, 172, 223, 0.4);
+        }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #resultadoHistorico {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .1);
+            line-height: 1.8;
+            min-height: 100px;
+            transition: opacity 0.3s ease;
+        }
+
+        #resultadoHistorico.loading {
+            opacity: 0.5;
+        }
+
+        .resultado-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .resultado-item:last-child {
+            border-bottom: none;
+        }
+
+        .resultado-destaque {
+            color: #0074D9;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .status {
+            margin-top: 20px;
+            text-align: center;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #27ae60;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.error {
+            background: #c0392b;
+            animation: none;
+        }
+
+        .status-indicator.loading {
+            background: #f39c12;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background: #fdecea;
+            color: #c0392b;
+            border-left: 4px solid #c0392b;
+        }
+
+        .alert-success {
+            background: #e8f8f0;
+            color: #27ae60;
+            border-left: 4px solid #27ae60;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+
+        .fonte-dados {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 24px;
+            }
+
+            .valor {
+                font-size: 28px;
+            }
+
+            .form-historico {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>🇦🇷 Cambial Argentina</h1>
+        <p>Monitoramento em Tempo Real • ARS • BRL • EUR</p>
+    </header>
+
+    <div class="container">
+
+        <div id="alerta" class="alert"></div>
+
+        <div class="grid">
+
+            <div class="card">
+                <h2>🇦🇷 ARS por EUR</h2>
+                <div id="ars" class="valor loading">Carregando...</div>
+            </div>
+
+            <div class="card">
+                <h2>🇧🇷 BRL por EUR</h2>
+                <div id="brl" class="valor loading">Carregando...</div>
+            </div>
+
+            <div class="card">
+                <h2>💱 BRL por ARS</h2>
+                <div id="arsbrl" class="valor loading">Carregando...</div>
+            </div>
+
+        </div>
+
+        <div class="status">
+            <span id="statusIndicator" class="status-indicator loading"></span>
+            <span>Última atualização: <strong id="horaAtualizacao">--</strong></span>
+            <span class="fonte-dados">| Fonte: Frankfurter API (BCE)</span>
+        </div>
+
+        <div class="historico">
+
+            <div class="card">
+
+                <h2>📅 Consultar Data Histórica</h2>
+                <p style="color: #666; margin: 10px 0 15px 0; font-size: 0.95em;">
+                    Selecione uma data para consultar as cotações históricas (a partir de 1999).
+                </p>
+
+                <div class="form-historico">
+                    <input type="date" id="dataHistorica" max="">
+                    <button onclick="consultarHistorico()" id="btnConsultar">
+                        <span id="btnTexto">🔍 Consultar Histórico</span>
+                    </button>
+                </div>
+
+                <div id="resultadoHistorico">
+                    Selecione uma data para consultar as cotações históricas.
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <footer>
+        <p>Atualização automática a cada 60 segundos</p>
+        <p style="font-size: 0.85em; margin-top: 5px;">
+            Dados fornecidos pelo Banco Central Europeu via Frankfurter API
+        </p>
+    </footer>
+
+    <script>
+
+        // Configuração das APIs (com fallback automático)
+        const APIS = {
+            principal: {
+                nome: 'Frankfurter',
+                atual: (base, symbols) =>
+                    `https://api.frankfurter.app/latest?from=${base}&to=${symbols}`,
+                historico: (data, base, symbols) =>
+                    `https://api.frankfurter.app/${data}?from=${base}&to=${symbols}`
+            },
+            fallback: {
+                nome: 'ExchangeRate-API',
+                atual: (base, symbols) =>
+                    `https://api.exchangerate-api.com/v4/latest/${base}`,
+                historico: null // Esta API não suporta histórico
+            }
+        };
+
+        let apiAtual = APIS.principal;
+        let intervaloAtualizacao = null;
+
+        // formata número para padrão brasileiro
+        function formatarNumero(valor, casasDecimais = 2) {
+            return valor.toLocaleString('pt-BR', {
+                minimumFractionDigits: casasDecimais,
+                maximumFractionDigits: casasDecimais
+            });
+        }
+
+        // exibe alerta na tela
+        function mostrarAlerta(mensagem, tipo = 'error') {
+            const alerta = document.getElementById('alerta');
+            alerta.className = `alert alert-${tipo} show`;
+            alerta.textContent = mensagem;
+
+            setTimeout(() => {
+                alerta.classList.remove('show');
+            }, 5000);
+        }
+
+        // atualiza o indicador de status
+        function atualizarStatus(status) {
+            const indicador = document.getElementById('statusIndicator');
+            indicador.className = 'status-indicator ' + status;
+        }
+
+        // define loading nos elementos
+        function setLoading(ids, loading = true) {
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (loading) {
+                    el.classList.add('loading');
+                } else {
+                    el.classList.remove('loading');
+                }
+            });
+        }
+
+        // atualiza as cotações atuais
+        async function atualizarCambio() {
+            setLoading(['ars', 'brl', 'arsbrl'], true);
+            atualizarStatus('loading');
+
+            try {
+                const url = apiAtual.atual('EUR', 'ARS,BRL');
+                const resposta = await fetch(url);
+
+                if (!resposta.ok) {
+                    throw new Error(`HTTP ${resposta.status}`);
+                }
+
+                const dados = await resposta.json();
+
+                if (!dados.rates || !dados.rates.ARS || !dados.rates.BRL) {
+                    throw new Error('Resposta inválida da API');
+                }
+
+                const eurArs = dados.rates.ARS;
+                const eurBrl = dados.rates.BRL;
+                const arsBrl = eurBrl / eurArs;
+
+                // atualiza os valores com animação suave
+                document.getElementById("ars").innerHTML =
+                    formatarNumero(eurArs);
+
+                document.getElementById("brl").innerHTML =
+                    formatarNumero(eurBrl);
+
+                document.getElementById("arsbrl").innerHTML =
+                    arsBrl.toFixed(6);
+
+                document.getElementById("horaAtualizacao").innerHTML =
+                    new Date().toLocaleString('pt-BR');
+
+                setLoading(['ars', 'brl', 'arsbrl'], false);
+                atualizarStatus('');
+
+                // volta para API principal se estava usando fallback
+                if (apiAtual === APIS.fallback) {
+                    console.log('Restaurando API principal...');
+                    apiAtual = APIS.principal;
+                }
+
+            } catch (erro) {
+                console.error('Erro na API principal:', erro);
+
+                // tenta usar API de fallback
+                if (apiAtual === APIS.principal) {
+                    console.log('Tentando API de fallback...');
+                    apiAtual = APIS.fallback;
+                    mostrarAlerta(
+                        'Usando fonte de dados alternativa. Tentando reconectar à fonte principal...',
+                        'error'
+                    );
+                    atualizarCambio();
+                    return;
+                }
+
+                // se ambas falharam
+                ['ars', 'brl', 'arsbrl'].forEach(id => {
+                    const el = document.getElementById(id);
+                    el.innerHTML = '⚠️ Indisponível';
+                    el.classList.remove('loading');
+                    el.classList.add('error');
+                });
+
+                document.getElementById("horaAtualizacao").innerHTML =
+                    "Falha na atualização";
+
+                atualizarStatus('error');
+                mostrarAlerta(
+                    'Não foi possível conectar às fontes de dados. Tentaremos novamente em 60 segundos.',
+                    'error'
+                );
+            }
+        }
+
+        // consulta dados históricos
+        async function consultarHistorico() {
+            const input = document.getElementById('dataHistorica');
+            const data = input.value;
+            const resultado = document.getElementById('resultadoHistorico');
+            const btn = document.getElementById('btnConsultar');
+            const btnTexto = document.getElementById('btnTexto');
+
+            if (!data) {
+                mostrarAlerta('Por favor, selecione uma data válida.', 'error');
+                return;
+            }
+
+            // validação: data não pode ser futura
+            const dataSelecionada = new Date(data);
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
+            if (dataSelecionada > hoje) {
+                mostrarAlerta('Não é possível consultar datas futuras.', 'error');
+                return;
+            }
+
+            // validação: API Frankfurter só tem dados a partir de 1999
+            if (dataSelecionada.getFullYear() < 1999) {
+                mostrarAlerta('Dados históricos disponíveis apenas a partir de 1999.', 'error');
+                return;
+            }
+
+            // verifica se é dia útil (aproximado - APIs podem não ter dados de fim de semana)
+            const diaSemana = dataSelecionada.getDay();
+            if (diaSemana === 0 || diaSemana === 6) {
+                mostrarAlerta(
+                    'A data selecionada é um fim de semana. Mostrando dados do dia útil mais próximo.',
+                    'success'
+                );
+            }
+
+            // estado de loading
+            resultado.classList.add('loading');
+            btn.disabled = true;
+            btnTexto.innerHTML = '<span class="spinner"></span> Consultando...';
+
+            try {
+                // usa API principal para histórico
+                const url = APIS.principal.historico(data, 'EUR', 'ARS,BRL');
+                const resposta = await fetch(url);
+
+                if (!resposta.ok) {
+                    throw new Error(`HTTP ${resposta.status}`);
+                }
+
+                const dados = await resposta.json();
+
+                if (!dados.rates || !dados.rates.ARS || !dados.rates.BRL) {
+                    throw new Error('Dados indisponíveis para esta data');
+                }
+
+                const ars = dados.rates.ARS;
+                const brl = dados.rates.BRL;
+                const arsBrl = brl / ars;
+                const dataFormatada = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+
+                resultado.innerHTML = `
+                    <h3 style="color: #003366; margin-bottom: 15px;">
+                        📊 Cotações de ${dataFormatada}
+                    </h3>
+                    <div class="resultado-item">
+                        🇦🇷 1 EUR = <span class="resultado-destaque">${formatarNumero(ars)} ARS</span>
+                    </div>
+                    <div class="resultado-item">
+                        🇧🇷 1 EUR = <span class="resultado-destaque">${formatarNumero(brl)} BRL</span>
+                    </div>
+                    <div class="resultado-item">
+                        💱 1 ARS = <span class="resultado-destaque">${arsBrl.toFixed(6)} BRL</span>
+                    </div>
+                    <div class="resultado-item">
+                        💱 1 BRL = <span class="resultado-destaque">${(ars / brl).toFixed(4)} ARS</span>
+                    </div>
+                    <p style="margin-top: 15px; font-size: 0.85em; color: #888;">
+                        Fonte: Banco Central Europeu | Data de referência: ${dados.date || data}
+                    </p>
+                `;
+
+                resultado.classList.remove('loading');
+
+            } catch (erro) {
+                console.error('Erro ao consultar histórico:', erro);
+
+                resultado.innerHTML = `
+                    <div style="color: #c0392b; padding: 15px; text-align: center;">
+                        <strong>⚠️ Dados indisponíveis para esta data.</strong>
+                        <p style="margin-top: 10px; font-size: 0.9em;">
+                            Verifique se a data está correta e tente novamente.
+                            Dados disponíveis de 1999 até hoje (exceto feriados europeus).
+                        </p>
+                    </div>
+                `;
+
+                resultado.classList.remove('loading');
+            } finally {
+                btn.disabled = false;
+                btnTexto.innerHTML = '🔍 Consultar Histórico';
+            }
+        }
+
+        // configuração inicial
+        function inicializar() {
+            // define data máxima como hoje
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('dataHistorica').max = hoje;
+
+            // define data padrão como 1 ano atrás
+            const umAnoAtras = new Date();
+            umAnoAtras.setFullYear(umAnoAtras.getFullYear() - 1);
+            document.getElementById('dataHistorica').value =
+                umAnoAtras.toISOString().split('T')[0];
+
+            // primeira atualização
+            atualizarCambio();
+
+            // atualização automática a cada 60 segundos
+            intervaloAtualizacao = setInterval(atualizarCambio, 60000);
+        }
+
+        // permite consultar com Enter
+        document.getElementById('dataHistorica').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                consultarHistorico();
+            }
+        });
+
+        // inicializa quando o DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializar);
+        } else {
+            inicializar();
+        }
+
+        // limpa intervalo ao fechar a página
+        window.addEventListener('beforeunload', () => {
+            if (intervaloAtualizacao) {
+                clearInterval(intervaloAtualizacao);
+            }
+        });
+
+    </script>
+
+</body>
+
+</html>
